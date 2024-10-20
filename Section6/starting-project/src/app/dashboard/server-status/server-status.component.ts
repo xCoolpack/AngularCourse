@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, effect, OnDestroy, OnInit, signal } from '@angular/core';
 
 @Component({
   selector: 'app-server-status',
@@ -7,21 +7,48 @@ import { Component, OnInit } from '@angular/core';
   templateUrl: './server-status.component.html',
   styleUrl: './server-status.component.css',
 })
-export class ServerStatusComponent implements OnInit {
-  currentStatus: 'online' | 'offline' | 'unknown' = 'online';
+export class ServerStatusComponent implements OnInit, OnDestroy {
+  currentStatus = signal<'online' | 'offline' | 'unknown'>('offline');
+  private interval?: ReturnType<typeof setInterval>;
+  // private destroyRef = inject(DestroyRef);
 
-  constructor() {}
+  constructor() {
+    // Setting subscription on signal
+    effect(() => {
+      console.log(this.currentStatus());
+    });
 
+    // // Cleanup before effect function run again
+    // effect((onCleanup) => {
+    //   const tasks = getTasks();
+    //   const timer = setTimeout(() => {
+    //     console.log(`Current number of tasks: ${tasks().length}`);
+    //   }, 1000);
+    //   onCleanup(() => {
+    //     clearTimeout(timer);
+    //   });
+    // });
+  }
+  
   ngOnInit() {
-    setInterval(() => {
+    this.interval = setInterval(() => {
       const rnd = Math.random(); // 0 - 0.999999999999
       if (rnd < 0.6) {
-        this.currentStatus = 'online';
+        this.currentStatus.set('online');
       } else if (rnd < 0.9) {
-        this.currentStatus = 'offline';
+        this.currentStatus.set('offline');
       } else {
-        this.currentStatus = 'unknown';
+        this.currentStatus.set('unknown');
       }
     }, 5000);
+
+    // Newer approach
+    // this.destroyRef.onDestroy(() => {
+    //   clearInterval(this.interval);
+    // }  
+  }
+
+  ngOnDestroy(): void {
+    clearInterval(this.interval);
   }
 }
