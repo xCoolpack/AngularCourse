@@ -15,12 +15,26 @@ export class LoginComponent {
 
   constructor() {
     afterNextRender(() => {
+      const savedForm = window.localStorage.getItem('saved-login-form');
+
+      if (savedForm) {
+        const loadedFormData = JSON.parse(savedForm);
+        const savedEmail = loadedFormData.email;
+        setTimeout(() => { // dirty sollution, for now
+          // this.form().setValue({
+          //   email: savedEmail,
+          //   password: ''
+          // })
+          this.form().controls['email'].setValue(savedEmail);
+        }, 1);
+      }
+
       const sub = this.form().valueChanges?.pipe(
         debounceTime(500)
       )
-      .subscribe({
-        next: (val) => window.localStorage.setItem('saved-login-form', JSON.stringify({email: val.email}))
-      });
+        .subscribe({
+          next: (val) => window.localStorage.setItem('saved-login-form', JSON.stringify({ email: val.email }))
+        });
 
       this.destroyRef.onDestroy(() => sub?.unsubscribe());
     });
